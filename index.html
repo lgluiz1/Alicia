@@ -1,34 +1,65 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script>
-      google.charts.load('current', { packages: ['table'] });
-      google.charts.setOnLoadCallback(drawTable);
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Cards com Google Sheets</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container mt-4">
+    <h2 class="mb-4">Bolos Cadastrados</h2>
+    <div class="row" id="card-container">
+      <!-- Os cards serão inseridos aqui -->
+    </div>
+  </div>
 
-      function drawTable() {
-        const queryString = encodeURIComponent("SELECT *");
-        const sheetName = "Form_Respostas"; // Nome da aba nova
-        const spreadsheetId = "1SEmiGROXG3Y91F92bZ5ECebkoBAV4K5M1N9sBF5tsYo";
-        const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?sheet=${sheetName}&tq=${queryString}`;
+  <script>
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/1SEmiGROXG3Y91F92bZ5ECebkoBAV4K5M1N9sBF5tsYo/gviz/tq?sheet=Form_Responses";
 
-        const query = new google.visualization.Query(url);
-        query.send(function(response) {
-          if (response.isError()) {
-            document.getElementById("output").innerHTML =
-              "Erro: " + response.getMessage();
-            return;
+    fetch(sheetUrl)
+      .then(res => res.text())
+      .then(data => {
+        const json = JSON.parse(data.substr(47).slice(0, -2)); // remove o prefixo e sufixo JS da resposta
+        const rows = json.table.rows;
+
+        const container = document.getElementById('card-container');
+
+        rows.forEach(row => {
+          const nome = row.c[1]?.v || "Sem nome";
+          const valor = row.c[2]?.v || "Sem valor";
+          const descricao = row.c[3]?.v || "Sem descrição";
+          const imgLink = row.c[4]?.v || "";
+
+          // Extrair ID da imagem do link do Google Drive
+          let imageId = "";
+          const match = imgLink.match(/[-\w]{25,}/);
+          if (match) {
+            imageId = match[0];
           }
-          const data = response.getDataTable();
-          const table = new google.visualization.Table(document.getElementById("output"));
-          table.draw(data, { showRowNumber: true, width: "100%" });
+
+          const imageUrl = imageId
+            ? `https://lh3.googleusercontent.com/d/${imageId}`
+            : "https://via.placeholder.com/300x200?text=Sem+Imagem";
+
+          const card = document.createElement('div');
+          card.className = 'col-md-4 mb-4';
+
+          card.innerHTML = `
+            <div class="card h-100">
+              <img src="${imageUrl}" class="card-img-top" alt="${nome}">
+              <div class="card-body">
+                <h5 class="card-title">${nome}</h5>
+                <p class="card-text"><strong>${valor}</strong></p>
+                <p class="card-text">${descricao}</p>
+              </div>
+            </div>
+          `;
+          container.appendChild(card);
         });
-      }
-    </script>
-  </head>
-  <body>
-    <h2>Pedidos de Bolo</h2>
-    <div id="output"></div>
-  </body>
+      })
+      .catch(error => console.error("Erro ao buscar dados:", error));
+  </script>
+
+   
+</body>
 </html>
