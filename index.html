@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script>
+      google.charts.load('current', { packages: ['table'] });
+      google.charts.setOnLoadCallback(drawTable);
+
+      function drawTable() {
+        const queryString = encodeURIComponent("SELECT *");
+        const sheetName = "Form_Respostas"; // Nome da aba nova
+        const spreadsheetId = "1SEmiGROXG3Y91F92bZ5ECebkoBAV4K5M1N9sBF5tsYo";
+        const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?sheet=${sheetName}&tq=${queryString}`;
+
+        const query = new google.visualization.Query(url);
+        query.send(function(response) {
+          if (response.isError()) {
+            document.getElementById("output").innerHTML =
+              "Erro: " + response.getMessage();
+            return;
+          }
+          const data = response.getDataTable();
+          const table = new google.visualization.Table(document.getElementById("output"));
+          table.draw(data, { showRowNumber: true, width: "100%" });
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <h2>Pedidos de Bolo</h2>
+    <div id="output"></div>
+  </body>
+</html>
